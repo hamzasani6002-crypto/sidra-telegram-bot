@@ -1,10 +1,25 @@
+import os
 import time
+import threading
 import requests
+from http.server import HTTPServer, BaseHTTPRequestHandler
 
 TOKEN = "8782617212:AAGEy5Zqez5rz60HzzjNR4DtkEKCd5aAL8I"
 URL = f"https://api.telegram.org/bot{TOKEN}/"
 
 bot_status = {"running": False, "trades": 0, "profit": 0.0}
+
+# Web Server mai sauƙi don gamsar da Render port check
+class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"Bot is live!")
+
+def run_web_server():
+    port = int(os.environ.get("PORT", 10000))
+    server = HTTPServer(("0.0.0.0", port), SimpleHTTPRequestHandler)
+    server.serve_forever()
 
 def get_updates(offset=None):
     try:
@@ -72,6 +87,9 @@ def handle_update(update):
             send_message(chat_id, "An sabunta shafin!", main_keyboard())
 
 def main():
+    # Tayar da Web Server a background don Render
+    threading.Thread(target=run_web_server, daemon=True).start()
+    
     print("Bot starting via Pure Telegram API...")
     offset = None
     while True:
@@ -84,4 +102,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
+            
